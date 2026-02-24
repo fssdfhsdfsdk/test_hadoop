@@ -153,3 +153,6 @@ SHUTDOWN_MSG: Shutting down NameNode at 311f821a368d/172.18.0.5
 ************************************************************/
 ➜  /workspace git:(master) ✗ 
 ```
+
+## 【failed】 放弃-nn1启动存在问题
+
