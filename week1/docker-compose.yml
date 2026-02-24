@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: hadoop-namenode
+    environment:
+      - CLUSTER_NAME=test-cluster
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_namenode_name_dir=file:///hadoop/nn
+      - YARN_CONF_yarn_resourcemanager_hostname=yarn-resourcemanager
+    ports:
+      - "9870:9870"  # Hadoop 3.x NameNode UI (旧版是 50070)
+      - "8088:8088"  # YARN ResourceManager UI
+    volumes:
+      - ./namenode:/hadoop/nn
+    networks:
+      - hadoop-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9870"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: hadoop-datanode
+    environment:
+      - CLUSTER_NAME=test-cluster
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_datanode_data_dir=file:///hadoop/dn
+      - YARN_CONF_yarn_resourcemanager_hostname=yarn-resourcemanager
+      - YARN_CONF_yarn_nodemanager_hostname=yarn-nodemanager
+    ports:
+      - "9864:9864"  # Hadoop 3.x DataNode UI (旧版是 50075)
+      - "8042:8042"  # NodeManager UI
+    volumes:
+      - ./datanode:/hadoop/dn
+    networks:
+      - hadoop-net
+    depends_on:
+      - namenode
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9864"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  hadoop-net:
+    driver: bridge
