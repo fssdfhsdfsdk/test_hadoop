@@ -1,0 +1,143 @@
+version: "3.8"
+
+services:
+  # --- ZooKeeper Cluster (3 Nodes) ---
+  zk1:
+    image: zookeeper:3.6
+    container_name: zk1
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zk1:2888:3888;2181 server.2=zk2:2888:3888;2181 server.3=zk3:2888:3888;2181
+    networks: [hadoop-net]
+  zk2:
+    image: zookeeper:3.6
+    container_name: zk2
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=zk1:2888:3888;2181 server.2=zk2:2888:3888;2181 server.3=zk3:2888:3888;2181
+    networks: [hadoop-net]
+  zk3:
+    image: zookeeper:3.6
+    container_name: zk3
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=zk1:2888:3888;2181 server.2=zk2:2888:3888;2181 server.3=zk3:2888:3888;2181
+    networks: [hadoop-net]
+
+  # --- JournalNode Cluster (3 Nodes) ---
+  jn1:
+    image: harisekhon/hadoop:3.2
+    container_name: jn1
+    command: hdfs journalnode
+    volumes:
+      - ./config:/opt/hadoop/etc/hadoop
+      - ./data/jn1:/data
+    networks: [hadoop-net]
+  jn2:
+    image: harisekhon/hadoop:3.2
+    container_name: jn2
+    command: hdfs journalnode
+    volumes:
+      - ./config:/opt/hadoop/etc/hadoop
+      - ./data/jn2:/data
+    networks: [hadoop-net]
+  jn3:
+    image: harisekhon/hadoop:3.2
+    container_name: jn3
+    command: hdfs journalnode
+    volumes:
+      - ./config:/opt/hadoop/etc/hadoop
+      - ./data/jn3:/data
+    networks: [hadoop-net]
+
+  # --- NameNode HA (2 Nodes) ---
+  nn1:
+    image: harisekhon/hadoop:3.2
+    container_name: nn1
+    command: hdfs namenode
+    environment:
+      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+    volumes:
+      - ./config:/opt/hadoop/etc/hadoop
+      - ./data/nn1:/data
+    ports:
+      - "9870:9870"
+    networks: [hadoop-net]
+    depends_on: [jn1, jn2, jn3, zk1, zk2, zk3]
+  nn2:
+    image: harisekhon/hadoop:3.2
+    container_name: nn2
+    command: hdfs namenode
+    environment:
+      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+    volumes:
+      - ./config:/opt/hadoop/etc/hadoop
+      - ./data/nn2:/data
+    ports:
+      - "9871:9870"
+    networks: [hadoop-net]
+    depends_on: [jn1, jn2, jn3, zk1, zk2, zk3]
+
+  # --- DataNode (2 Nodes) ---
+  dn1:
+    image: harisekhon/hadoop:3.2
+    container_name: dn1
+    command: hdfs datanode
+    volumes:
+      - ./config:/opt/hadoop/etc/hadoop
+      - ./data/dn1:/data
+    networks: [hadoop-net]
+    depends_on: [nn1, nn2]
+  dn2:
+    image: harisekhon/hadoop:3.2
+    container_name: dn2
+    command: hdfs datanode
+    volumes:
+      - ./config:/opt/hadoop/etc/hadoop
+      - ./data/dn2:/data
+    networks: [hadoop-net]
+    depends_on: [nn1, nn2]
+
+  # --- ResourceManager HA (2 Nodes) ---
+  rm1:
+    image: harisekhon/hadoop:3.2
+    container_name: rm1
+    command: yarn resourcemanager
+    volumes:
+      - ./config:/opt/hadoop/etc/hadoop
+    ports:
+      - "8088:8088"
+    networks: [hadoop-net]
+    depends_on: [nn1, nn2]
+  rm2:
+    image: harisekhon/hadoop:3.2
+    container_name: rm2
+    command: yarn resourcemanager
+    volumes:
+      - ./config:/opt/hadoop/etc/hadoop
+    ports:
+      - "8089:8088"
+    networks: [hadoop-net]
+    depends_on: [nn1, nn2]
+
+  # --- NodeManager (2 Nodes) ---
+  nm1:
+    image: harisekhon/hadoop:3.2
+    container_name: nm1
+    command: yarn nodemanager
+    volumes:
+      - ./config:/opt/hadoop/etc/hadoop
+    networks: [hadoop-net]
+    depends_on: [rm1, rm2]
+  nm2:
+    image: harisekhon/hadoop:3.2
+    container_name: nm2
+    command: yarn nodemanager
+    volumes:
+      - ./config:/opt/hadoop/etc/hadoop
+    networks: [hadoop-net]
+    depends_on: [rm1, rm2]
+
+networks:
+  hadoop-net:
+    driver: bridge

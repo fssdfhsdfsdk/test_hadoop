@@ -1,0 +1,73 @@
+<configuration>
+    <!-- 定义 Nameservice ID -->
+    <property>
+        <name>dfs.nameservices</name>
+        <value>mycluster</value>
+    </property>
+    
+    <!-- 定义该 Nameservice 下的 NameNode ID -->
+    <property>
+        <name>dfs.ha.namenodes.mycluster</name>
+        <value>nn1,nn2</value>
+    </property>
+    
+    <!-- NN1 的 RPC 地址 -->
+    <property>
+        <name>dfs.namenode.rpc-address.mycluster.nn1</name>
+        <value>nn1:8020</value>
+    </property>
+    <!-- NN1 的 HTTP 地址 -->
+    <property>
+        <name>dfs.namenode.http-address.mycluster.nn1</name>
+        <value>nn1:9870</value>
+    </property>
+    
+    <!-- NN2 的 RPC 地址 -->
+    <property>
+        <name>dfs.namenode.rpc-address.mycluster.nn2</name>
+        <value>nn2:8020</value>
+    </property>
+    <property>
+        <name>dfs.namenode.http-address.mycluster.nn2</name>
+        <value>nn2:9870</value>
+    </property>
+    
+    <!-- 故障转移代理 provider -->
+    <property>
+        <name>dfs.client.failover.proxy.provider.mycluster</name>
+        <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+    </property>
+    
+    <!-- 共享 EditsLog 的 JournalNode 地址 -->
+    <property>
+        <name>dfs.namenode.shared.edits.dir</name>
+        <value>qjournal://jn1:8485;jn2:8485;jn3:8485/mycluster</value>
+    </property>
+    
+    <!-- 启用自动故障转移 -->
+    <property>
+        <name>dfs.ha.automatic-failover.enabled</name>
+        <value>true</value>
+    </property>
+    
+    <!-- ZKFC 配置 -->
+    <property>
+        <name>dfs.ha.fencing.methods</name>
+        <value>sshfence</value>
+    </property>
+    <property>
+        <name>dfs.ha.fencing.ssh.private-key-files</name>
+        <value>/root/.ssh/id_rsa</value>
+    </property>
+    <!-- 简化教程：关闭 fencing 严格检查，避免 SSH 配置麻烦 -->
+    <property>
+        <name>dfs.ha.fencing.methods</name>
+        <value>shell(/bin/true)</value>
+    </property>
+
+    <!-- 副本数 (因为只有 2 个 DN) -->
+    <property>
+        <name>dfs.replication</name>
+        <value>2</value>
+    </property>
+</configuration>
